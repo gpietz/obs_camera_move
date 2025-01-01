@@ -9,9 +9,8 @@ namespace ObsCamMove {
     }
 
     String CameraController::log_error(const String& error_message) {
-        const auto message = "ERROR: " + error_message;
-        log(LogLevel::ERROR, message);
-        return message;
+        log(LogLevel::ERROR, error_message);
+        return "ERROR: " + error_message;
     }
 
     String CameraController::get_camera_value(const GetCameraValueCallback &get_value_function) const {
