@@ -164,7 +164,7 @@ namespace ObsCamMove {
     String CameraController::get_position() const {
         return get_camera_value([](obs_scene*, const obs_sceneitem_t* camera, const obs_source_t*) {
             obs_transform_info transform;
-            obs_sceneitem_get_info(camera, &transform);
+            obs_sceneitem_get_info2(camera, &transform);
             const auto x = transform.pos.x;
             const auto y = transform.pos.y;
             return std::format("camera-position: x={}, y={}", x, y);

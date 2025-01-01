@@ -46,16 +46,25 @@ namespace ObsCamMove {
         auto socket = std::make_shared<asio::ip::tcp::socket>(io_context_);
         acceptor_.async_accept(*socket, [this, socket](const asio::error_code& ec) {
             if (!ec) {
-                std::ostringstream oss;
-                oss << "Client Connection from " << socket->remote_endpoint();
-                log(LogLevel::INFO, oss.str());
+                // Check whether the connection is coming from localhost
+                const auto remote_endpoint = socket->remote_endpoint();
+                const auto remote_address = remote_endpoint.address().to_string();
 
-                auto connection =
-                    std::make_shared<TCPConnection>(socket, [this](const TCPConnectionPtr& conn) {
-                    remove_connection(conn);
-                });
-                connections_.push_back(connection);
-                connection->start();
+                if (remote_address == "127.0.0.1") {
+                    std::ostringstream oss;
+                    oss << "Client Connection from " << socket->remote_endpoint();
+                    log(LogLevel::INFO, oss.str());
+
+                    const auto connection = std::make_shared<TCPConnection>(socket,
+                        [this](const TCPConnectionPtr& conn) {
+                        remove_connection(conn);
+                    });
+                    connections_.push_back(connection);
+                    connection->start();
+                } else {
+                    log(LogLevel::WARN, "Rejected connection from: " + remote_address);
+                    socket->close();
+                }
             } else {
                 log(LogLevel::ERROR, std::string("Accepted error: ") + ec.message());
             }
