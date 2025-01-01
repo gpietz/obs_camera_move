@@ -27,5 +27,6 @@ namespace ObsCamMove {
         static String handle_get_camera_name(const MessageCommand& command);
         static String handle_move_to(const MessageCommand& command);
         static String handle_move_by(const MessageCommand& command);
+        static String handle_get_camera_position(const MessageCommand& command);
     };
 }

@@ -13,6 +13,7 @@ namespace ObsCamMove {
         register_handler("get_camera_name", handle_get_camera_name);
         register_handler("move_to", handle_move_to);
         register_handler("move_by", handle_move_by);
+        register_handler("get_camera_position", handle_get_camera_position);
     }
 
     void MessageHandler::register_handler(const std::string& command, HandlerFunction handler) {
@@ -111,5 +112,9 @@ namespace ObsCamMove {
         } catch (const std::out_of_range& e) {
             return log_error("Parameter(s) out of range for move_to.");
         }
+    }
+
+    String MessageHandler::handle_get_camera_position(const MessageCommand&) {
+        return CameraController::getInstance().get_position();
     }
 }

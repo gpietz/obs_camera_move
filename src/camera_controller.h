@@ -42,8 +42,11 @@ namespace ObsCamMove {
         void fade_out(int duration);
         void show();
         void hide();
+        **/
 
-        std::tuple<int, int> get_position() const;
+        String get_position() const;
+
+        /**
         std::tuple<int, int> get_scale() const;
         bool get_visibility() const;
 
@@ -58,12 +61,18 @@ namespace ObsCamMove {
         **/
 
     private:
+        typedef std::function<String(obs_scene_t*, obs_sceneitem_t*, obs_source_t*)> GetCameraValueCallback;
+
         std::unordered_set<std::string> camera_names_;
         std::atomic<bool> camera_moving_;
 
         CameraController();
 
+        static String log_error(const String& error_message);
         static obs_scene_t* find_active_scene();
+
+        String get_camera_value(const GetCameraValueCallback &get_value_function) const;
+
         obs_sceneitem_t* find_active_camera_item() const;
     };
 }

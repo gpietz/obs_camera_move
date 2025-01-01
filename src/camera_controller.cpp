@@ -1,11 +1,53 @@
 #include "camera_controller.h"
 #include "logger.h"
+#include "string_utils.h"
 #include <obs.h>
 #include <obs-frontend-api.h>
-#include "string_utils.h"
 
 namespace ObsCamMove {
     CameraController::CameraController() : camera_moving_(false) {
+    }
+
+    String CameraController::log_error(const String& error_message) {
+        const auto message = "ERROR: " + error_message;
+        log(LogLevel::ERROR, message);
+        return message;
+    }
+
+    String CameraController::get_camera_value(const GetCameraValueCallback &get_value_function) const {
+        if (camera_names_.empty()) {
+            return log_error("Unable to find any camera items!");
+        }
+
+        const auto scene_source = obs_frontend_get_current_scene();
+        if (!scene_source) {
+            return log_error("No current scene available!");
+        }
+
+        const auto scene = obs_scene_from_source(scene_source);
+        obs_source_release(scene_source); // Important: Releasing the source to prevent memory leaks!
+        if (!scene) {
+            return log_error("Current source is not a scene!");
+        }
+
+        obs_sceneitem_t* camera = nullptr;
+        for (const auto& source_name : camera_names_) {
+            if (obs_sceneitem_t* item = obs_scene_find_source(scene, source_name.c_str())) {
+                camera = item;
+                break;
+            }
+        }
+
+        if (!camera) {
+            return log_error("No camera in current scene found!");
+        }
+
+        const auto camera_source = obs_sceneitem_get_source(camera);
+        if (camera_source == nullptr) {
+            return log_error("ERROR: Source item for camera not found");
+        }
+
+        return get_value_function(scene, camera, camera_source);
     }
 
     obs_sceneitem_t* CameraController::find_active_camera_item() const {
@@ -43,30 +85,14 @@ namespace ObsCamMove {
         const auto new_camera_names= join_strings(names, [](String s) {
             return std::format("\"{}\"", s);
         });
+
         log(LogLevel::INFO, "Setting camera names: " + new_camera_names);
     }
 
     String CameraController::get_camera_name() const {
-        if (camera_names_.empty()) {
-            return "ERROR: Camera names not set";
-        }
-
-        const auto camera_item = find_active_camera_item();
-        if (camera_item == nullptr) {
-            return "ERROR: Camera item not found";
-        }
-
-        const auto source = obs_sceneitem_get_source(camera_item);
-        if (source == nullptr) {
-            return "ERROR: Source item not found";
-        }
-
-        const auto name = obs_source_get_name(source);
-        if (name == nullptr) {
-            return "ERROR: Name for source item not found";
-        }
-
-        return String(name);
+        return get_camera_value([](obs_scene_t*, obs_sceneitem_t*, const obs_source_t* camera_source) {
+            return obs_source_get_name(camera_source);
+        });
     }
 
     void CameraController::move_to(int x, int y, int duration) {
@@ -134,5 +160,15 @@ namespace ObsCamMove {
         float target_y = start_y + dy;
 
         move_to(target_x, target_y, duration);
+    }
+
+    String CameraController::get_position() const {
+        return get_camera_value([](obs_scene*, const obs_sceneitem_t* camera, const obs_source_t*) {
+            obs_transform_info transform;
+            obs_sceneitem_get_info(camera, &transform);
+            const auto x = transform.pos.x;
+            const auto y = transform.pos.y;
+            return std::format("camera-position: x={}, y={}", x, y);
+        });
     }
 }
