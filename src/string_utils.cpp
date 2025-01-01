@@ -3,11 +3,15 @@
 #include <locale>
 
 namespace ObsCamMove {
-    constexpr bool isNullOrWhitespace(const char* str) {
+    bool isNullOrWhitespace(const String& str) {
+        return isNullOrWhitespace(str.c_str());
+    }
+
+    bool isNullOrWhitespace(const char* str) {
         return str == nullptr || isNullOrWhitespace(StringView(str));
     }
 
-    constexpr bool isNullOrWhitespace(StringView view) {
+    bool isNullOrWhitespace(StringView view) {
         return view.empty() || std::ranges::all_of(view, [](unsigned char c) {
            return std::isspace(c);
         });
@@ -42,5 +46,44 @@ namespace ObsCamMove {
         const auto end = std::find_if_not(str.rbegin(), str.rend(),
             [](const unsigned char c) { return std::isspace(c) || c == '\n' || c == '\t'; }).base();
         return (start < end ? std::string(start, end) : "");
+    }
+
+    String join_strings(
+        const std::vector<String>& strings,
+        const String& delimiter,
+        const std::function<const String(String)> &modifier,
+        const bool allow_empty_strings) {
+
+        std::ostringstream oss;
+        bool first = true;
+
+        for (const auto& str : strings) {
+            // ReSharper disable once CppTooWideScopeInitStatement
+            const String current = modifier ? modifier(str) : str;
+            if (!current.empty() || allow_empty_strings) {
+                if (!first && !delimiter.empty()) {
+                    oss << delimiter;
+                }
+                oss << current;
+                first = false;
+            }
+        }
+
+        return oss.str();
+    }
+
+    String join_strings(
+        const std::vector<String>& strings,
+        const std::function<const String(String)> &modifier,
+        const bool allow_empty_strings) {
+        return join_strings(strings, ", ", modifier, allow_empty_strings);
+    }
+
+    String remove_quotes(const String& input, const bool with_trim) {
+        if (input.size() >= 2 && input.front() == '"' && input.back() == '"') {
+            const auto unquoted = input.substr(1, input.size() - 2);
+            return with_trim ? trim(unquoted) : unquoted;
+        }
+        return input;
     }
 }

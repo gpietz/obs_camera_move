@@ -1,21 +1,28 @@
 #include "message_command.h"
+#include "logger.h"
+#include "string_utils.h"
 #include <sstream>
 
 namespace ObsCamMove {
     static const std::regex COMMAND_REGEX(R"(^(\w+)\(([^)]*)\);?$)");
 
     MessageCommand::MessageCommand(const String& message) : raw_msg_(message) {
-        std::smatch match;
-
-        if (std::regex_match(raw_msg_, match, COMMAND_REGEX)) {
-            const String command = match[1];
+        log(LogLevel::DEBUG, "Parsing message command: " + message);
+        if (std::smatch match; std::regex_match(raw_msg_, match, COMMAND_REGEX)) {
+            command_ = match[1];
             const String params = match[2];
 
-            std::istringstream param_stream(command);
+            // Extract command parameters
+            std::istringstream param_stream(params);
             String param;
             while (std::getline(param_stream, param, ',')) {
-                params_.push_back(param);
+                params_.push_back(trim(param));
             }
+
+            log(LogLevel::DEBUG, "Command parse: " + command_);
+            log(LogLevel::DEBUG, "Parameters parsed: " + std::to_string(params_.size()));
+        } else {
+            log(LogLevel::ERROR, "Invalid message command: " + raw_msg_);
         }
     }
 

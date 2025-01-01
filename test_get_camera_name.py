@@ -7,7 +7,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
 
     # Nachricht senden
-    message = 'test_echo("Hello world")'
+    message = 'set_camera_names("scn_facecam")'
+    s.sendall(message.encode())
+
+    # Antwort empfangen
+    data = s.recv(1024)
+    print('Received:', data.decode().strip())
+
+    # Nachricht senden
+    message = 'get_camera_name()'
     s.sendall(message.encode())
 
     # Antwort empfangen

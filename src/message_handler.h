@@ -22,6 +22,9 @@ namespace ObsCamMove {
         void register_handler(const std::string& command, HandlerFunction handler);
 
         static String log_error(const String& message);
+        static String handle_test_echo(const MessageCommand& command);
+        static String handle_set_camera_names(const MessageCommand& command);
+        static String handle_get_camera_name(const MessageCommand& command);
         static String handle_move_to(const MessageCommand& command);
         static String handle_move_by(const MessageCommand& command);
     };

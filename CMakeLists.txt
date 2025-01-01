@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
-# OBS SDK path
+# ==== OBS SDK ====
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
 find_package(OBS REQUIRED)
 
@@ -35,7 +35,12 @@ set (SOURCES
 # Create shared library
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
-# Include obj library and includes
-target_include_directories(${PROJECT_NAME} PRIVATE ${OBS_INCLUDE_DIR} ${asio_SOURCE_DIR}/asio/include)
-target_link_directories(${PROJECT_NAME} PRIVATE ${OBS_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${OBS_LIBRARY})
+# Include directories
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${OBS_INCLUDE_DIR}
+    ${OBS_FRONTEND_INCLUDE_DIR}
+    ${asio_SOURCE_DIR}/asio/include)
+
+# Link libraries
+target_link_directories(${PROJECT_NAME} PRIVATE ${OBS_LIBRARY} ${OBS_FRONTENT_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OBS_LIBRARY} ${OBS_FRONTEND_LIBRARY})

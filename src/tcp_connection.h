@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prerequisites.h"
+#include "message_handler.h"
 
 namespace ObsCamMove {
     class TCPConnection;
@@ -19,6 +20,7 @@ namespace ObsCamMove {
         AsioTcpSocketPtr socket_;
         std::array<char, 1024> buffer_;
         DisconnectCallback disconnect_callback_;
+        MessageHandler message_handler_;
 
         void process_data();
     };

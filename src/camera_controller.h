@@ -23,6 +23,7 @@ namespace ObsCamMove {
         }
 
         void set_camera_names(std::vector<String> names);
+        String get_camera_name() const;
 
         //! Moves the webcam to the specified position (x, y) over the specified duration in milliseconds.
         void move_to(int x, int y, int duration);
@@ -44,7 +45,7 @@ namespace ObsCamMove {
 
         std::tuple<int, int> get_position() const;
         std::tuple<int, int> get_scale() const;
-        bool get_visibiliy() const;
+        bool get_visibility() const;
 
         void set_bounds(int min_x, int min_y, int max_x, int max_y);
         void set_speed(int speed);
@@ -62,7 +63,7 @@ namespace ObsCamMove {
 
         CameraController();
 
-        obs_scene_t* find_active_scene() const;
+        static obs_scene_t* find_active_scene();
         obs_sceneitem_t* find_active_camera_item() const;
     };
 }

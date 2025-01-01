@@ -1,12 +1,16 @@
 #include "message_handler.h"
 #include "message_command.h"
 #include "logger.h"
+#include "string_utils.h"
 #include <regex>
 
 #include "camera_controller.h"
 
 namespace ObsCamMove {
     MessageHandler::MessageHandler() {
+        register_handler("test_echo", handle_test_echo);
+        register_handler("set_camera_names", handle_set_camera_names);
+        register_handler("get_camera_name", handle_get_camera_name);
         register_handler("move_to", handle_move_to);
         register_handler("move_by", handle_move_by);
     }
@@ -34,6 +38,39 @@ namespace ObsCamMove {
     String MessageHandler::log_error(const String& message) {
         log(LogLevel::ERROR, message);
         return String("ERROR: ") + message;
+    }
+
+    String MessageHandler::handle_test_echo(const MessageCommand& command) {
+        const auto& params = command.get_params();
+
+        if (params.size() != 1 || params[0].empty()) {
+            return "Test echo: This test message is 100% gluten-free, enjoy responsibly!";
+        }
+
+        return String("Test echo: ") + params[0];
+    }
+
+    String MessageHandler::handle_set_camera_names(const MessageCommand& command) {
+        if (const auto& params = command.get_params(); params.size() > 0) {
+            std::vector<String> camera_names;
+
+            for (auto str : command.get_params()) {
+                if (const auto camera_name = remove_quotes(str, true); !camera_name.empty()) {
+                    camera_names.push_back(camera_name);
+                }
+            }
+
+            if (camera_names.size() > 0) {
+                CameraController::getInstance().set_camera_names(camera_names);
+                return std::format("OK: Camera names set ({})", camera_names.size());
+            }
+        }
+
+        return String("ERROR: No valid camera names provided");
+    }
+
+    String MessageHandler::handle_get_camera_name(const MessageCommand&) {
+        return CameraController::getInstance().get_camera_name();
     }
 
     String MessageHandler::handle_move_to(const MessageCommand& command) {
