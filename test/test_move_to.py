@@ -15,6 +15,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print('Received:', data.decode().strip())
 
     # Nachricht senden
+    #message = 'move_to(0,0,840,10)'
     message = 'move_to(0,1095,840,10)'
     s.sendall(message.encode())
 

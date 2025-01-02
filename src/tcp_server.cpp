@@ -2,6 +2,9 @@
 #include "tcp_server.h"
 #include "logger.h"
 #include "tcp_connection.h"
+#include <mutex>
+
+static std::mutex server_lock;
 
 namespace ObsCamMove {
     TCPServer::TCPServer(const uint16_t port)
@@ -31,13 +34,16 @@ namespace ObsCamMove {
     }
 
     void TCPServer::stop() {
-        if (running_.load()) {
-            running_.store(false);
+        std::lock_guard lock(server_lock);
+
+        if (bool expected = true; running_.compare_exchange_strong(expected, false)) {
             io_context_.stop();
             if (server_thread_.joinable()) {
                 server_thread_.join();
             }
             log(LogLevel::INFO, std::string("Server stopped."));
+        } else {
+            log(LogLevel::INFO, "Stop called but server was already stopped.");
         }
     }
 
