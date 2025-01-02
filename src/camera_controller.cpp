@@ -1,4 +1,5 @@
 #include "camera_controller.h"
+#include "camera_easing.h"
 #include "logger.h"
 #include "string_utils.h"
 #include <obs.h>
@@ -94,8 +95,8 @@ namespace ObsCamMove {
         });
     }
 
-    void CameraController::move_to(int x, int y, int duration) {
-        auto cameraItem = find_active_camera_item();
+    void CameraController::move_to(const int x, const int y, const int duration, const u8 easing) {
+        const auto cameraItem = find_active_camera_item();
         if (cameraItem == nullptr) {
             log(LogLevel::WARN, "Can't find active camera; moving is not possible!");
             return;
@@ -113,21 +114,49 @@ namespace ObsCamMove {
             vec2 start_pos;
             obs_sceneitem_get_pos(cameraItem, &start_pos);
 
-            int start_x = static_cast<int>(start_pos.x);
-            int start_y = static_cast<int>(start_pos.y);
+            float start_x = start_pos.x;
+            float start_y = start_pos.y;
 
-            // Number of steps based on the duration and resolution
-            const int fps = 60;
-            const int steps = duration / (1000 / fps);
+            log(LogLevel::DEBUG, std::format("Starting pos: {}, {}", start_x, start_y));
+
+            // Calculate distance
+            const float distance = std::sqrt(std::pow(x - start_x, 2) + std::pow(y - start_y, 2));
+
+            // Retrieve FPS from OBS
+            double fps = obs_get_active_fps();
+            if (fps <= 0.0) {
+                log(LogLevel::ERROR, "Failed to retrieve FPS value from OBS. Defaulting to 60.");
+                fps = 60.0;
+            }
+
+            // Speed and FPS settings
+            constexpr float speed_per_second = 300.0f; // Pixels per Second
+            const float speed_per_frame = speed_per_second / static_cast<float>(fps);
+
+            // Calculate number of steps and duration per step
+            const int steps = std::max(1, static_cast<int>(distance / speed_per_frame));
             const float step_duration = duration / static_cast<float>(steps);
 
-            for (int i = 0; i < steps; i++) {
-                // Lerp (linear interpolation)
-                float t = i / static_cast<float>(steps);
-                float current_x = static_cast<int>(start_x + t * (x - start_x));
-                float current_y = static_cast<int>(start_y + t * (y - start_y));
+            log(LogLevel::DEBUG, std::format("Number of steps: {}", steps));
+            log(LogLevel::DEBUG, std::format("FPS: {}", fps));
+            log(LogLevel::DEBUG, std::format("Step duration: {}", step_duration));
 
-                vec2 new_pos = { static_cast<float>(current_x), static_cast<float>(current_y) };
+            // Convert value to easing type
+            const auto easing_type = CameraEasing::to_camera_easing_type(easing);
+
+            for (int i = 0; i < steps; i++) {
+                float t = i / static_cast<float>(steps);
+
+                // Easing
+                t = CameraEasing::calculate(easing_type, t);
+
+                // Calculate new camera position per step
+                vec2 new_pos = {
+                    start_x + t * (x - start_x),
+                    start_y + t * (y - start_y)
+                };
+
+                // Update camera position
                 obs_sceneitem_set_pos(cameraItem, &new_pos);
 
                 // Wait before the next step is executed
@@ -138,7 +167,7 @@ namespace ObsCamMove {
         }).detach();
     }
 
-    void CameraController::move_by(int dx, int dy, int duration) {
+    void CameraController::move_by(const int dx, const int dy, const int duration, const u8 easing) {
         auto cameraItem = find_active_camera_item();
         if (cameraItem == nullptr) {
             log(LogLevel::WARN, "Can't find active camera; moving is not possible!");
@@ -153,12 +182,12 @@ namespace ObsCamMove {
         vec2 start_pos;
         obs_sceneitem_get_pos(cameraItem, &start_pos);
 
-        float start_x = start_pos.x;
-        float start_y = start_pos.y;
-        float target_x = start_x + dx;
-        float target_y = start_y + dy;
+        const float start_x = start_pos.x;
+        const float start_y = start_pos.y;
+        const float target_x = start_x + dx;
+        const float target_y = start_y + dy;
 
-        move_to(target_x, target_y, duration);
+        move_to(target_x, target_y, duration, easing);
     }
 
     String CameraController::get_position() const {

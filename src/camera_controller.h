@@ -8,13 +8,6 @@
 #include <obs-module.h>
 
 namespace ObsCamMove {
-    enum class CameraEasingType : uint8_t {
-        Linear,
-        EaseIn,
-        EaseOut,
-        EaseInOut,
-    };
-
     class CameraController {
     public:
         static CameraController& getInstance() {
@@ -26,9 +19,9 @@ namespace ObsCamMove {
         String get_camera_name() const;
 
         //! Moves the webcam to the specified position (x, y) over the specified duration in milliseconds.
-        void move_to(int x, int y, int duration);
+        void move_to(int x, int y, int duration, u8 easing = 0);
         //! Moves the webcam relative to the current position by (dx, dy) over the specified duration.
-        void move_by(int dx, int dy, int duration);
+        void move_by(int dx, int dy, int duration, u8 easing = 0);
 
         /**
         void follow(std::string objectId, int duration, bool reset);

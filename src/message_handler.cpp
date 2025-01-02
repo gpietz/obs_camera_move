@@ -77,7 +77,7 @@ namespace ObsCamMove {
     String MessageHandler::handle_move_to(const MessageCommand& command) {
         const auto& params = command.get_params();
 
-        if (params.size() != 3) {
+         if (params.size() < 3 || params.size() > 4) {
             return log_error("Wrong number of parameters for move_to command: ") + std::to_string(params.size());
         }
 
@@ -85,7 +85,13 @@ namespace ObsCamMove {
             const int x = std::stoi(String(params[0]));
             const int y = std::stoi(String(params[1]));
             const int duration = std::stoi(String(params[2]));
-            CameraController::getInstance().move_to(x, y, duration);
+
+            u8 easing = 0;
+            if (params.size() > 3) {
+                easing = std::stoi(String(params[3]));
+            }
+
+            CameraController::getInstance().move_to(x, y, duration, easing);
             return "OK";
         } catch (const std::invalid_argument& e) {
             return log_error("Invalid parameter(s) for move_to. All parameters must be integers.");
@@ -97,7 +103,7 @@ namespace ObsCamMove {
     String MessageHandler::handle_move_by(const MessageCommand& command) {
         const auto& params = command.get_params();
 
-        if (params.size() != 3) {
+        if (params.size() < 3 || params.size() > 4) {
             return log_error("Wrong number of parameters for move_to command: ") + std::to_string(params.size());
         }
 
@@ -105,6 +111,12 @@ namespace ObsCamMove {
             const int dx = std::stoi(String(params[0]));
             const int dy = std::stoi(String(params[1]));
             const int duration = std::stoi(String(params[2]));
+
+            u8 easing = 0;
+            if (params.size() > 3) {
+                easing = std::stoi(String(params[3]));
+            }
+
             CameraController::getInstance().move_by(dx, dy, duration);
             return "OK";
         } catch (const std::invalid_argument& e) {
