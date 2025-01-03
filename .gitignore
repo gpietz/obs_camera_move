@@ -31,6 +31,31 @@
 *.out
 *.app
 
+# C# specific ignores
+*.exe
+*.dll
+*.pdb
+*.vshost.exe
+*.user
+*.lock.json
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.vs/
+.vscode/
+.idea/
+
+# Build directories
+bin/
+obj/
+
+# Rider specific
+.idea/
+*.iml
+.idea.cammove_cli/
+
+# CMake build directories
 /cmake-build-release
 /cmake-build-debug
-/.idea
